@@ -1,152 +1,161 @@
-Análisis de Tráfico de Red: Detección de Beaconing en DNS y HTTP
-Resumen Ejecutivo
+# Informe de Análisis de Tráfico de Red
 
-El presente proyecto documenta un laboratorio de ciberseguridad orientado al análisis de tráfico de red, con el objetivo de identificar patrones de comunicación automatizada compatibles con comportamiento de tipo beaconing.
+## Identificación de Patrones de Beaconing mediante DNS y HTTP
 
-El análisis se llevó a cabo en un entorno controlado, donde el tráfico fue generado intencionalmente, capturado mediante tcpdump y posteriormente analizado con Wireshark, simulando el flujo de trabajo de un analista SOC.
+---
 
-Entorno del Laboratorio
+## 1. Resumen Ejecutivo
 
-Equipo de análisis:
-Kali Linux — 192.168.93.128
+El presente informe expone los resultados de un análisis de tráfico de red realizado en un entorno controlado, con el objetivo de identificar patrones anómalos de comunicación saliente.
 
-Equipo objetivo:
-Ubuntu Server — 192.168.93.130
+A partir de la captura y análisis de paquetes, se detectaron consultas DNS repetitivas y solicitudes HTTP periódicas. Este comportamiento es consistente con patrones de beaconing, comúnmente asociados a comunicaciones de Command and Control (C2).
 
-Servidor DNS:
-192.168.93.2
+Los hallazgos evidencian oportunidades de detección a nivel de red y demuestran cómo este tipo de actividad puede ser identificada mediante técnicas utilizadas en Centros de Operaciones de Seguridad (SOC).
 
-Red:
-192.168.93.0/24
+---
 
-Herramientas utilizadas:
+## 2. Alcance y Objetivos
 
-tcpdump
-Wireshark
-curl
-nslookup
-Objetivos
-Capturar tráfico de red en un entorno controlado
-Analizar comunicaciones DNS y HTTP
-Identificar patrones repetitivos de tráfico saliente
-Simular un escenario de análisis SOC
-Definir lógica de detección basada en el comportamiento observado
-Simulación de Tráfico
+### Alcance
 
-El tráfico fue generado desde el equipo objetivo con el fin de emular comportamiento de comunicación saliente.
+El análisis se llevó a cabo en un entorno de laboratorio simulado, compuesto por un equipo analista y un host objetivo generador de tráfico.
 
-Se utilizaron las siguientes herramientas:
+### Objetivos
 
-Generación de solicitudes HTTP:
+* Capturar y analizar tráfico de red en un entorno controlado
+* Identificar patrones de comunicación DNS y HTTP
+* Detectar actividad repetitiva saliente
+* Simular un flujo de análisis típico de un SOC
+* Definir criterios de detección aplicables a SIEM
 
-curl http://example.com
+---
 
-Resolución de nombres de dominio:
+## 3. Descripción del Entorno
 
-nslookup example.com
+### Infraestructura
 
-Simulación de tráfico repetitivo (beaconing):
+* Host Analista: Kali Linux (192.168.93.128)
+* Host Objetivo: Ubuntu Server (192.168.93.130)
+* Servidor DNS: 192.168.93.2
+* Segmento de Red: 192.168.93.0/24
 
-while true; do curl http://example.com; sleep 2; done
+### Herramientas Utilizadas
 
-Captura de Tráfico
+* tcpdump (captura de tráfico)
+* Wireshark (análisis de paquetes)
+* curl (generación de solicitudes HTTP)
+* nslookup (resolución DNS)
 
-La captura del tráfico de red se realizó desde el equipo de análisis mediante el siguiente comando:
+---
+
+## 4. Metodología de Generación de Tráfico
+
+Se generó tráfico saliente desde el host objetivo con el fin de simular patrones realistas de comunicación.
+
+Las acciones realizadas incluyen:
+
+* Solicitudes HTTP a dominios externos mediante curl
+* Resolución de dominios utilizando nslookup
+* Ejecución repetitiva de solicitudes para simular comportamiento automatizado
+
+Se implementó un mecanismo de ejecución en bucle para generar intervalos constantes, replicando un patrón de beaconing.
+
+---
+
+## 5. Captura de Tráfico
+
+El tráfico fue capturado desde el host analista mediante el siguiente comando:
 
 sudo tcpdump -i eth0 -w network-analysis.pcap
 
-El archivo resultante contiene el tráfico utilizado para el análisis posterior.
+El archivo resultante contiene tráfico DNS y HTTP generado durante la simulación y constituye la base del análisis.
 
-Análisis
-Análisis DNS
+---
 
-Se identificaron múltiples consultas DNS hacia dominios externos, entre ellos:
+## 6. Análisis y Hallazgos
 
-example.com
-neverssl.com
+### 6.1 Actividad DNS
 
-Las consultas fueron realizadas contra el servidor DNS interno (192.168.93.2) e incluyen registros de tipo A y AAAA.
+Se identificaron múltiples consultas DNS dirigidas a dominios externos, entre ellos:
 
-Este comportamiento es consistente con procesos normales de resolución de nombres.
+* example.com
+* neverssl.com
 
-Análisis HTTP
+Observaciones clave:
 
-Mediante el uso de Wireshark y el filtro:
+* Consultas repetitivas a los mismos dominios
+* Uso del servidor DNS interno (192.168.93.2)
+* Resolución de registros tipo A y AAAA
 
-http.request
+Este comportamiento es consistente con procesos de resolución previos a comunicaciones salientes.
 
-Se observaron múltiples solicitudes HTTP GET dirigidas a direcciones IP externas:
+---
 
-172.66.147.243
-104.20.23.154
+### 6.2 Actividad HTTP
 
-Las solicitudes presentan características consistentes:
+Mediante el uso de filtros en Wireshark se identificó tráfico HTTP con las siguientes características:
 
-Método: GET
-Protocolo: HTTP/1.1
-User-Agent: curl
-Identificación de Patrones
+* Solicitudes HTTP GET repetitivas
+* Conexiones hacia direcciones IP externas:
 
-El análisis del tráfico permitió identificar:
+  * 172.66.147.243
+  * 104.20.23.154
+* Estructura de solicitud uniforme
+* User-Agent identificado como curl
 
-Solicitudes HTTP repetitivas
-Intervalos de tiempo regulares entre conexiones
-Comunicación hacia destinos constantes
+---
 
-Este patrón es característico de comportamientos automatizados y puede asociarse a:
+### 6.3 Análisis de Patrón de Tráfico
 
-Beaconing
-Scripts automatizados
-Comunicación de Command and Control (C2)
-Hallazgos
-Repetición de consultas DNS hacia los mismos dominios
-Tráfico HTTP periódico hacia direcciones IP externas
-Generación automatizada de solicitudes
-Uso de protocolo HTTP sin cifrado
+El análisis combinado de DNS y HTTP evidencia:
 
-El conjunto de estos indicadores evidencia un patrón compatible con actividad de tipo beaconing.
+* Comunicación saliente periódica
+* Conexión repetida a los mismos destinos
+* Estructura constante de las solicitudes
+* Intervalos regulares entre eventos
 
-Mapeo MITRE ATT&CK
-Táctica: Command and Control
-Técnica: T1071 – Application Layer Protocol
-Subtécnica: T1071.001 – Web Protocols
-Lógica de Detección
+Este patrón es característico de comportamiento automatizado y coincide con técnicas de beaconing.
 
-Se propone la siguiente lógica de detección:
+---
 
-Múltiples solicitudes HTTP
-Desde una misma dirección IP de origen
-Hacia un mismo destino
-En intervalos de tiempo reducidos y constantes
+## 7. Hallazgos Clave
 
-Este patrón puede ser implementado en soluciones SIEM para la generación de alertas.
+* Consultas DNS repetitivas a dominios específicos
+* Comunicación HTTP periódica hacia hosts externos
+* Generación automatizada de tráfico desde el host objetivo
+* Uso de protocolo HTTP sin cifrado
 
-Recomendaciones
-Implementar monitoreo continuo del tráfico de red
-Configurar reglas de correlación en SIEM para detectar patrones repetitivos
-Analizar logs DNS en busca de comportamientos anómalos
-Restringir conexiones salientes innecesarias
-Implementar inspección de tráfico y controles de red
-Evidencia
+La correlación de estos indicadores sugiere comportamiento compatible con mecanismos de Command and Control.
 
-Las evidencias utilizadas en el análisis se encuentran disponibles en el directorio:
+---
 
-/evidence
+## 8. Mapeo MITRE ATT&CK
 
-Incluyen:
+* Táctica: Command and Control
+* Técnica: T1071 – Application Layer Protocol
+* Subtécnica: T1071.001 – Web Protocols
 
-Generación de tráfico HTTP
-Resolución DNS
-Captura de tráfico
-Análisis en Wireshark
-Flujo de red filtrado por dirección IP
-Informe Completo
+---
 
-El informe técnico detallado se encuentra disponible en:
+## 9. Consideraciones de Detección
 
-/report/Incident-Report-Network-Traffic-Analysis.pdf
+Se recomienda implementar las siguientes reglas de detección:
 
-Autor
+* Alta frecuencia de solicitudes HTTP desde un mismo origen
+* Conexiones repetidas hacia un mismo destino
+* Intervalos constantes entre solicitudes
+* Consultas DNS recurrentes a dominios específicos
 
-Nicolás Sotomayor
-SOC Analyst (Junior) | Blue Team | Cybersecurity
+Estas condiciones pueden ser correlacionadas en plataformas SIEM para detectar actividad sospechosa de forma temprana.
+
+---
+
+## 10. Conclusión
+
+El análisis realizado permitió identificar patrones de comunicación automatizada que replican comportamiento típico de beaconing.
+
+Este tipo de actividad representa un indicador relevante en la detección de amenazas avanzadas y destaca la importancia del monitoreo continuo del tráfico de red.
+
+La implementación de mecanismos de detección basados en comportamiento resulta clave para fortalecer las capacidades de respuesta ante incidentes en entornos SOC.
+
+---
