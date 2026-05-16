@@ -1,3 +1,4 @@
+
 # Informe de Análisis de Tráfico de Red
 
 ## Identificación de Patrones de Beaconing mediante DNS y HTTP
@@ -6,11 +7,9 @@
 
 ## 1. Resumen Ejecutivo
 
-El presente informe expone los resultados de un análisis de tráfico de red realizado en un entorno controlado, con el objetivo de identificar patrones anómalos de comunicación saliente.
+El presente informe expone los resultados del análisis de tráfico de red realizado en un entorno controlado, con el objetivo de identificar patrones de comunicación anómalos.
 
-A partir de la captura y análisis de paquetes, se detectaron consultas DNS repetitivas y solicitudes HTTP periódicas. Este comportamiento es consistente con patrones de beaconing, comúnmente asociados a comunicaciones de Command and Control (C2).
-
-Los hallazgos evidencian oportunidades de detección a nivel de red y demuestran cómo este tipo de actividad puede ser identificada mediante técnicas utilizadas en Centros de Operaciones de Seguridad (SOC).
+A partir de la evidencia recolectada (ver Anexo A), se detectaron consultas DNS repetitivas y solicitudes HTTP periódicas hacia destinos externos. Este comportamiento es consistente con patrones de beaconing, típicamente asociados a mecanismos de Command and Control (C2).
 
 ---
 
@@ -18,15 +17,14 @@ Los hallazgos evidencian oportunidades de detección a nivel de red y demuestran
 
 ### Alcance
 
-El análisis se llevó a cabo en un entorno de laboratorio simulado, compuesto por un equipo analista y un host objetivo generador de tráfico.
+El análisis se realizó sobre tráfico capturado en un entorno de laboratorio simulado, documentado mediante evidencia técnica incluida en el Anexo A.
 
 ### Objetivos
 
-* Capturar y analizar tráfico de red en un entorno controlado
-* Identificar patrones de comunicación DNS y HTTP
-* Detectar actividad repetitiva saliente
-* Simular un flujo de análisis típico de un SOC
-* Definir criterios de detección aplicables a SIEM
+* Analizar tráfico DNS y HTTP
+* Identificar patrones repetitivos de comunicación
+* Correlacionar eventos de red
+* Generar evidencia técnica documentada
 
 ---
 
@@ -34,98 +32,89 @@ El análisis se llevó a cabo en un entorno de laboratorio simulado, compuesto p
 
 ### Infraestructura
 
-* Host Analista: Kali Linux (192.168.93.128)
-* Host Objetivo: Ubuntu Server (192.168.93.130)
-* Servidor DNS: 192.168.93.2
-* Segmento de Red: 192.168.93.0/24
-
-### Herramientas Utilizadas
-
-* tcpdump (captura de tráfico)
-* Wireshark (análisis de paquetes)
-* curl (generación de solicitudes HTTP)
-* nslookup (resolución DNS)
+* Host Analista: Kali Linux (192.168.93.128) — ver Imagen 04
+* Host Objetivo: Ubuntu Server (192.168.93.130) — ver Imagen 11
+* Red: 192.168.93.0/24
 
 ---
 
-## 4. Metodología de Generación de Tráfico
+## 4. Metodología
 
-Se generó tráfico saliente desde el host objetivo con el fin de simular patrones realistas de comunicación.
+Se generó tráfico controlado desde el host objetivo utilizando herramientas de línea de comandos.
 
-Las acciones realizadas incluyen:
+### Evidencia
 
-* Solicitudes HTTP a dominios externos mediante curl
-* Resolución de dominios utilizando nslookup
-* Ejecución repetitiva de solicitudes para simular comportamiento automatizado
-
-Se implementó un mecanismo de ejecución en bucle para generar intervalos constantes, replicando un patrón de beaconing.
+* Generación de solicitud HTTP mediante curl — ver Imagen 01
+* Resolución DNS de dominio externo — ver Imagen 02
+* Ejecución repetitiva de solicitudes (simulación de automatización) — ver Imagen 03
 
 ---
 
 ## 5. Captura de Tráfico
 
-El tráfico fue capturado desde el host analista mediante el siguiente comando:
+La captura fue realizada mediante tcpdump:
 
 sudo tcpdump -i eth0 -w network-analysis.pcap
 
-El archivo resultante contiene tráfico DNS y HTTP generado durante la simulación y constituye la base del análisis.
+### Evidencia
+
+* Inicio de captura — ver Imagen 06
+* Resumen de paquetes capturados — ver Imagen 07
 
 ---
 
-## 6. Análisis y Hallazgos
+## 6. Análisis de Tráfico
 
 ### 6.1 Actividad DNS
 
-Se identificaron múltiples consultas DNS dirigidas a dominios externos, entre ellos:
+Se identificaron consultas DNS hacia dominios externos.
 
-* example.com
-* neverssl.com
+### Evidencia
 
-Observaciones clave:
+* Análisis DNS en Wireshark — ver Imagen 08
 
-* Consultas repetitivas a los mismos dominios
-* Uso del servidor DNS interno (192.168.93.2)
-* Resolución de registros tipo A y AAAA
+### Observaciones
 
-Este comportamiento es consistente con procesos de resolución previos a comunicaciones salientes.
+* Consultas repetitivas a example.com
+* Respuestas desde servidor DNS interno
 
 ---
 
 ### 6.2 Actividad HTTP
 
-Mediante el uso de filtros en Wireshark se identificó tráfico HTTP con las siguientes características:
+Se identificaron múltiples solicitudes HTTP salientes.
 
-* Solicitudes HTTP GET repetitivas
-* Conexiones hacia direcciones IP externas:
+### Evidencia
 
-  * 172.66.147.243
-  * 104.20.23.154
-* Estructura de solicitud uniforme
-* User-Agent identificado como curl
+* Tráfico HTTP en Wireshark — ver Imagen 09
 
----
+### Observaciones
 
-### 6.3 Análisis de Patrón de Tráfico
-
-El análisis combinado de DNS y HTTP evidencia:
-
-* Comunicación saliente periódica
-* Conexión repetida a los mismos destinos
-* Estructura constante de las solicitudes
-* Intervalos regulares entre eventos
-
-Este patrón es característico de comportamiento automatizado y coincide con técnicas de beaconing.
+* Solicitudes GET repetitivas
+* Destinos externos identificados
+* Uso de herramienta curl
 
 ---
 
-## 7. Hallazgos Clave
+### 6.3 Flujo de Comunicación
 
-* Consultas DNS repetitivas a dominios específicos
-* Comunicación HTTP periódica hacia hosts externos
-* Generación automatizada de tráfico desde el host objetivo
-* Uso de protocolo HTTP sin cifrado
+Se analizó el comportamiento del host objetivo.
 
-La correlación de estos indicadores sugiere comportamiento compatible con mecanismos de Command and Control.
+### Evidencia
+
+* Análisis de tráfico por IP origen — ver Imagen 10
+* Validación de conectividad — ver Imagen 05
+
+---
+
+## 7. Hallazgos
+
+A partir de la correlación de la evidencia (Anexo A), se identificó:
+
+* Comunicación periódica hacia destinos externos
+* Consultas DNS repetidas
+* Tráfico HTTP automatizado
+* Patrón consistente de beaconing
 
 ---
 
@@ -137,25 +126,33 @@ La correlación de estos indicadores sugiere comportamiento compatible con mecan
 
 ---
 
-## 9. Consideraciones de Detección
+## 9. Conclusión
 
-Se recomienda implementar las siguientes reglas de detección:
+La evidencia analizada confirma la presencia de un patrón de comunicación automatizada que simula comportamiento de beaconing.
 
-* Alta frecuencia de solicitudes HTTP desde un mismo origen
-* Conexiones repetidas hacia un mismo destino
-* Intervalos constantes entre solicitudes
-* Consultas DNS recurrentes a dominios específicos
-
-Estas condiciones pueden ser correlacionadas en plataformas SIEM para detectar actividad sospechosa de forma temprana.
+Este tipo de actividad es relevante en la detección de amenazas avanzadas y puede ser identificado mediante monitoreo de tráfico de red y correlación de eventos.
 
 ---
 
-## 10. Conclusión
+## 10. Anexo A – Evidencia
 
-El análisis realizado permitió identificar patrones de comunicación automatizada que replican comportamiento típico de beaconing.
-
-Este tipo de actividad representa un indicador relevante en la detección de amenazas avanzadas y destaca la importancia del monitoreo continuo del tráfico de red.
-
-La implementación de mecanismos de detección basados en comportamiento resulta clave para fortalecer las capacidades de respuesta ante incidentes en entornos SOC.
+| Imagen | Descripción                            |
+| ------ | -------------------------------------- |
+| 01     | Generación de solicitud HTTP (curl)    |
+| 02     | Resolución DNS (nslookup)              |
+| 03     | Automatización de solicitudes          |
+| 04     | Configuración de red en Kali           |
+| 05     | Validación de conectividad (ping)      |
+| 06     | Inicio de captura con tcpdump          |
+| 07     | Resumen de captura                     |
+| 08     | Análisis DNS en Wireshark              |
+| 09     | Análisis HTTP en Wireshark             |
+| 10     | Flujo de tráfico por IP                |
+| 11     | Configuración de red del host objetivo |
 
 ---
+
+
+
+
+
